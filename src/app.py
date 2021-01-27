@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect
 from flask_mysqldb import MySQL
 
 from utils.helper import read_config
+import datetime
 
 from constants import SECRET_FILE_PATH, SUCCESS_RESPONSE, NOT_COMPLETED_STATUS
 
@@ -20,48 +21,80 @@ mysql = MySQL(app)
 
 created_by = 'user_id'  #This has to the login ID of the user
 
-@app.route('/add_todo', methods=['POST'])
-def add_todo():
-    """
-    Get the new task to be added and insert into the table.
 
-    Args:
-        name: task name.
+@app.route('/update_status', methods=['POST'])
+def update_status():
+    time = datetime.datetime.today()
+    time = time.isoformat()
+    print(time)
+    request_data = request.json
+    name = request_data['name']
+    cursor = mysql.connection.cursor()
+    cursor.execute("UPDATE todo set STATUS='COMPLETED',MODIFIED_DATE=%s where NAME=%s",(time,name)) 
+    SUCCESS_RESPONSE['data'] = "Successful"  
+    mysql.connection.commit()
+    cursor.close()
+    return SUCCESS_RESPONSE
 
-    Returns:
-        Success reponse, if success. Else, error reponse with the error message
-    """
+@app.route('/fetch_category')
+def fetch_category():
+
+    cursor = mysql.connection.cursor()
+    cursor.execute('''SELECT CATEGORY FROM todo_category''')
+    row_headers=[x[0] for x in cursor.description]
+    row_values = cursor.fetchall()
+    json_data = []
+    for row_value in row_values:
+        json_data.append(dict(zip(row_headers,row_value)))
+    SUCCESS_RESPONSE['data'] = json_data
+    return SUCCESS_RESPONSE
+
+
+@app.route('/add_category', methods=['POST'])
+def add_category():
 
     request_data = request.json
     name = request_data['name']
     cursor = mysql.connection.cursor()
-    cursor.execute("INSERT INTO todo(name, status, created_by) VALUES(%s, %s, %s)",(name, NOT_COMPLETED_STATUS, created_by))
+    cursor.execute('''SELECT CATEGORY FROM todo_category''')
+    row_values = cursor.fetchall()
+    for row_value in row_values:
+        if name in row_value[0]:
+            return {"status_code": 409,"data": "Category already exists",}
+    cursor.execute("INSERT INTO todo_category(CATEGORY) VALUES(%s)",(name,))
     mysql.connection.commit()
     cursor.close()
-
+    SUCCESS_RESPONSE['data'] = "Successful"
     return SUCCESS_RESPONSE
+
+@app.route('/add_todo', methods=['POST'])
+def add_todo():
+    request_data = request.json
+    name = request_data['name']
+    category=request_data['category']
+    cursor = mysql.connection.cursor()
+    cursor.execute('''SELECT ID,CATEGORY FROM todo_category''')
+    row_values = cursor.fetchall()
+    for row_value in row_values:
+        if category in row_value[1]:
+            cursor.execute("INSERT INTO todo(name, status, created_by,CATEGORY_ID) VALUES(%s, %s, %s,%s)",(name, NOT_COMPLETED_STATUS,created_by,row_value[0]))
+            mysql.connection.commit()
+            cursor.close()
+            SUCCESS_RESPONSE['data'] = "Successful"
+            return SUCCESS_RESPONSE
+
+    return {"status_code": 400,"data": "Category does not exists",}
 
 @app.route('/fetch_todo')
 def fetch_todo():
-    """
-    Retrieve all todos from the table
 
-    Args:
-        No arguments passed
-
-    Returns:
-        Success reponse with data, if success. Else, error reponse with the error message
-    """
-    print("aaa")
     cursor = mysql.connection.cursor()
-    print("bbb")
     cursor.execute('''SELECT * FROM todo''')
     row_headers=[x[0] for x in cursor.description]
     row_values = cursor.fetchall()
     json_data = []
     for row_value in row_values:
         json_data.append(dict(zip(row_headers,row_value)))
-
     SUCCESS_RESPONSE['data'] = json_data
     return SUCCESS_RESPONSE
 

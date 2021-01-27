@@ -1,0 +1,12 @@
+.DS_Store
+_build
+_resources
+logs
+.vscode
+._*
+*.DS_Store
+*.pyc
+__pycache__
+src/etc/configs/secrets.ini
+.pytest_cache
+.coverage
