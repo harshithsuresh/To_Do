@@ -22,3 +22,7 @@
     Access the APIs with.
         localhost:5000/fetch_todo
         localhost:5000/add_todo
+		localhost:5000/add_category   (add new category)
+		localhost:5000/update_status (update the task status completed)
+		localhost:5000/fetch_category (to get category list)
+		
