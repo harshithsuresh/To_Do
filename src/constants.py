@@ -4,7 +4,7 @@ SECRET_FILE_PATH = join(os.getcwd(),'etc', 'configs', 'secrets.ini')
 
 SUCCESS_RESPONSE = {
     "status_code": 200,
-    "data": {},
+    "data": {"message":"Successful"}
 }
 
 COMPLETED_STATUS = 'COMPLETED'

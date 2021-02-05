@@ -21,17 +21,39 @@ mysql = MySQL(app)
 
 created_by = 'user_id'  #This has to the login ID of the user
 
+@app.route('/delete_task', methods=['POST'])
+def delete_task():
+    request_data = request.json
+    name = request_data['name']
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM todo where NAME=%s",(name,))
+    row_values = cursor.fetchall()
+    if not len(row_values):
+        return {"status_code": 400,"data": {"message":"To do not found"}}
+    cursor.execute("DELETE from todo where NAME=%s",(name,))
+    SUCCESS_RESPONSE['data'] = {"message":"Successful"}  
+    mysql.connection.commit()
+    cursor.close()
+    return SUCCESS_RESPONSE
 
 @app.route('/update_status', methods=['POST'])
 def update_status():
     time = datetime.datetime.today()
     time = time.isoformat()
-    print(time)
     request_data = request.json
     name = request_data['name']
     cursor = mysql.connection.cursor()
-    cursor.execute("UPDATE todo set STATUS='COMPLETED',MODIFIED_DATE=%s where NAME=%s",(time,name)) 
-    SUCCESS_RESPONSE['data'] = "Successful"  
+    cursor.execute("SELECT STATUS FROM todo where NAME=%s",(name,))
+    row_values = cursor.fetchall()
+    if not len(row_values):
+        return {"status_code": 400,"data": {"message":"To do not found"}}
+    row_value=row_values[0]
+    STATUS=row_value[0]
+    if STATUS in "COMPLETED":
+        cursor.execute("UPDATE todo set STATUS='NOT_COMPLETED',MODIFIED_DATE=%s where NAME=%s",(time,name))
+    else:
+        cursor.execute("UPDATE todo set STATUS='COMPLETED',MODIFIED_DATE=%s where NAME=%s",(time,name)) 
+    SUCCESS_RESPONSE['data'] = {"message":"Successful"}  
     mysql.connection.commit()
     cursor.close()
     return SUCCESS_RESPONSE
@@ -40,7 +62,7 @@ def update_status():
 def fetch_category():
 
     cursor = mysql.connection.cursor()
-    cursor.execute('''SELECT CATEGORY FROM todo_category''')
+    cursor.execute('''SELECT ID,CATEGORY FROM todo_category''')
     row_headers=[x[0] for x in cursor.description]
     row_values = cursor.fetchall()
     json_data = []
@@ -60,30 +82,30 @@ def add_category():
     row_values = cursor.fetchall()
     for row_value in row_values:
         if name in row_value[0]:
-            return {"status_code": 409,"data": "Category already exists",}
+            return {"status_code": 409,"data": {"message":"Category already exists"}}
     cursor.execute("INSERT INTO todo_category(CATEGORY) VALUES(%s)",(name,))
     mysql.connection.commit()
     cursor.close()
-    SUCCESS_RESPONSE['data'] = "Successful"
+    SUCCESS_RESPONSE['data'] = {"message":"Successful"}
     return SUCCESS_RESPONSE
 
 @app.route('/add_todo', methods=['POST'])
 def add_todo():
     request_data = request.json
     name = request_data['name']
-    category=request_data['category']
+    ID=request_data['id']
     cursor = mysql.connection.cursor()
-    cursor.execute('''SELECT ID,CATEGORY FROM todo_category''')
+    cursor.execute('''SELECT ID FROM todo_category''')
     row_values = cursor.fetchall()
     for row_value in row_values:
-        if category in row_value[1]:
+        if str(ID) in str(row_value[0]):
             cursor.execute("INSERT INTO todo(name, status, created_by,CATEGORY_ID) VALUES(%s, %s, %s,%s)",(name, NOT_COMPLETED_STATUS,created_by,row_value[0]))
             mysql.connection.commit()
             cursor.close()
-            SUCCESS_RESPONSE['data'] = "Successful"
+            SUCCESS_RESPONSE['data'] = {"message":"Successful"}
             return SUCCESS_RESPONSE
 
-    return {"status_code": 400,"data": "Category does not exists",}
+    return {"status_code": 400,"data": {"message":"Category does not exists"}}
 
 @app.route('/fetch_todo')
 def fetch_todo():
