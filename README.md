@@ -20,10 +20,11 @@
     Run Flask server (inside src directory) with
         python app.py
     Access the APIs with.
-        localhost:5000/fetch_todo
-        localhost:5000/add_todo
+        localhost:5000/fetch_todo	(fetch all the tasks)
+        localhost:5000/add_todo		(add new task)
 		localhost:5000/add_category   (add new category)
-		localhost:5000/update_status (update the task status completed) negate the current status
+		localhost:5000/update/status (update the task status to completed|not_completed) negate the current status
+		localhost:5000/update/category (to change the existing todo category)
 		localhost:5000/fetch_category (to get category list)
 		localhost:5000/delete   		(to delete the todo task)
 		
