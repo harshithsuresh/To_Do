@@ -23,6 +23,7 @@
         localhost:5000/fetch_todo
         localhost:5000/add_todo
 		localhost:5000/add_category   (add new category)
-		localhost:5000/update_status (update the task status completed)
+		localhost:5000/update_status (update the task status completed) negate the current status
 		localhost:5000/fetch_category (to get category list)
+		localhost:5000/delete   		(to delete the todo task task)
 		
