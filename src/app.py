@@ -24,9 +24,9 @@ created_by = 'user_id'  #This has to the login ID of the user
 @app.route('/delete_task', methods=['POST'])
 def delete_task():
     request_data = request.json
-    name = request_data['name']
+    id = request_data['id']
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM todo where NAME=%s",(name,))
+    cursor.execute("SELECT * FROM todo where ID=%s",(id,))
     row_values = cursor.fetchall()
     if not len(row_values):
         return {"status_code": 400,"data": {"message":"To do not found"}}
@@ -42,18 +42,18 @@ def update(type):
         time = datetime.datetime.today()
         time = time.isoformat()
         request_data = request.json
-        name = request_data['name']
+        id = request_data['id']
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT STATUS FROM todo where NAME=%s",(name,))
+        cursor.execute("SELECT STATUS FROM todo where ID=%s",(id,))
         row_values = cursor.fetchall()
         if not len(row_values):
             return {"status_code": 400,"data": {"message":"To do not found"}}
         row_value=row_values[0]
         STATUS=row_value[0]
         if STATUS in "COMPLETED":
-            cursor.execute("UPDATE todo set STATUS='NOT_COMPLETED',MODIFIED_DATE=%s where NAME=%s",(time,name))
+            cursor.execute("UPDATE todo set STATUS='NOT_COMPLETED',MODIFIED_DATE=%s where ID=%s",(time,id))
         else:
-            cursor.execute("UPDATE todo set STATUS='COMPLETED',MODIFIED_DATE=%s where NAME=%s",(time,name)) 
+            cursor.execute("UPDATE todo set STATUS='COMPLETED',MODIFIED_DATE=%s where ID=%s",(time,id)) 
         SUCCESS_RESPONSE['data'] = {"message":"Successful"}  
         mysql.connection.commit()
         cursor.close()
